@@ -52,15 +52,20 @@ def populate_nifty_1m_table():
             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
             payload = ''
             headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=1&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+            # conn.request("GET",
+            #              "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=1&from=" + str(
+            #                  from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+
+            conn.request("GET","/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&periodicity=MINUTE&period=1&max=2&instrumentIdentifier=" + indexsymbol, payload, headers)
+
+
+
             res = conn.getresponse()
             data = res.read()
             print(data)
             json_object = json.loads(data.decode("utf-8"))
 
-            out_dict = json_object["OHLC"][0]
+            out_dict = json_object["OHLC"][1]
 
             to_db_dict["close"] = out_dict.get('CLOSE')
             to_db_dict["high"] = out_dict.get('HIGH')
@@ -75,6 +80,9 @@ def populate_nifty_1m_table():
             update_db(to_db_dict, "NIFTY_1m_Ticker")
             populate_NIFTY_1m_indicators()
             is_hammer("NIFTY_1m_Ticker")
+            update_db_color("NIFTY_1m_Ticker")
+            update_db_doji("NIFTY_1m_Ticker")
+            # update_db_buy("NIFTY_1m_Ticker")
         except Exception as e:
             print(e)
             continue
@@ -300,12 +308,12 @@ def populate_NIFTY_1m_indicators():
                           'Trusted_Connection=yes;')  # integrated security
 
     cur = conn.cursor()
-    cur.execute('''SELECT * FROM NIFTY_1m_Ticker''')
+    cur.execute('''SELECT * FROM NIFTY_1m_Ticker Order By datetime Asc''')
     myresult = cur.fetchall()
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -313,7 +321,7 @@ def populate_NIFTY_1m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -356,7 +364,7 @@ def populate_NIFTY_2m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -399,7 +407,7 @@ def populate_NIFTY_3m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -442,7 +450,7 @@ def populate_NIFTY_5m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -485,7 +493,7 @@ def populate_NIFTY_10m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -534,15 +542,20 @@ def populate_CE_1m_table():
             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
             payload = ''
             headers = {}
+            # conn.request("GET",
+            #              "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=1&from=" + str(
+            #                  from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+
             conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=1&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&periodicity=MINUTE&period=1&max=2&instrumentIdentifier=" + cesymbol,
+                         payload, headers)
+
             res = conn.getresponse()
             data = res.read()
             print(data)
             json_object = json.loads(data.decode("utf-8"))
 
-            out_dict = json_object["OHLC"][0]
+            out_dict = json_object["OHLC"][1]
 
             to_db_dict["close"] = out_dict.get('CLOSE')
             to_db_dict["high"] = out_dict.get('HIGH')
@@ -557,6 +570,9 @@ def populate_CE_1m_table():
             update_db(to_db_dict, "CE_STRIKE_1m_Ticker")
             populate_CE_1m_indicators()
             is_hammer("CE_STRIKE_1m_Ticker")
+            update_db_color("CE_STRIKE_1m_Ticker")
+            update_db_doji("CE_STRIKE_1m_Ticker")
+            # update_db_buy("CE_STRIKE_1m_Ticker")
         except Exception as e:
             print(e)
             continue
@@ -782,12 +798,12 @@ def populate_CE_1m_indicators():
                           'Trusted_Connection=yes;')  # integrated security
 
     cur = conn.cursor()
-    cur.execute('''SELECT * FROM CE_STRIKE_1m_Ticker''')
+    cur.execute('''SELECT * FROM CE_STRIKE_1m_Ticker Order By datetime Asc''')
     myresult = cur.fetchall()
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -795,7 +811,7 @@ def populate_CE_1m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -838,7 +854,7 @@ def populate_CE_2m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -881,7 +897,7 @@ def populate_CE_3m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -924,7 +940,7 @@ def populate_CE_5m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -967,7 +983,7 @@ def populate_CE_10m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -1017,15 +1033,20 @@ def populate_PE_1m_table():
             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
             payload = ''
             headers = {}
+            # conn.request("GET",
+            #              "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=1&from=" + str(
+            #                  from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+
             conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=1&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&periodicity=MINUTE&period=1&max=2&instrumentIdentifier=" + pesymbol,
+                         payload, headers)
+
             res = conn.getresponse()
             data = res.read()
             # print(data)
             json_object = json.loads(data.decode("utf-8"))
 
-            out_dict = json_object["OHLC"][0]
+            out_dict = json_object["OHLC"][1]
 
             to_db_dict["close"] = out_dict.get('CLOSE')
             to_db_dict["high"] = out_dict.get('HIGH')
@@ -1040,6 +1061,9 @@ def populate_PE_1m_table():
             update_db(to_db_dict, "PE_STRIKE_1m_Ticker")
             populate_PE_1m_indicators()
             is_hammer("PE_STRIKE_1m_Ticker")
+            update_db_color("PE_STRIKE_1m_Ticker")
+            update_db_doji("PE_STRIKE_1m_Ticker")
+            # update_db_buy("PE_STRIKE_1m_Ticker")
         except Exception as e:
             print(e)
             continue
@@ -1265,12 +1289,12 @@ def populate_PE_1m_indicators():
                           'Trusted_Connection=yes;')  # integrated security
 
     cur = conn.cursor()
-    cur.execute('''SELECT * FROM PE_STRIKE_1m_Ticker''')
+    cur.execute('''SELECT * FROM PE_STRIKE_1m_Ticker Order By datetime Asc''')
     myresult = cur.fetchall()
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -1284,6 +1308,15 @@ def populate_PE_1m_indicators():
     adx_series = TA.ADX(df, 14)
     ema9_series = TA.EMA(df, 9)
     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+
+    # df.ta.ema(13, append=True)
+    # df.ta.sma(20, append=True)
+    # df.ta.adx(14, append=True)
+    # df.ta.ema(9, append=True)
+    #
+    # print(df)
+    # print(df.columns)
+
 
     rownum = 0
     for index, rows in df.iterrows():
@@ -1321,7 +1354,7 @@ def populate_PE_2m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -1364,7 +1397,7 @@ def populate_PE_3m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -1407,7 +1440,7 @@ def populate_PE_5m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -1450,7 +1483,7 @@ def populate_PE_10m_indicators():
                     }
 
     df = df.astype(convert_dict)
-    print(df.dtypes)
+    # print(df.dtypes)
     smma_series = TA.SMMA(df, 7)
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
@@ -1482,7 +1515,7 @@ def is_hammer(table):
                           'Trusted_Connection=yes;')  # integrated security
 
     cur = conn.cursor()
-    cur.execute("SELECT * FROM " + table)
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
     full_row = cur.fetchall()
 
     open = float(full_row[0][0])
@@ -1494,21 +1527,23 @@ def is_hammer(table):
     adx = float(full_row[0][12])
     ema9 = float(full_row[0][13])
 
+    epoch = int(full_row[0][8])
+
     upper_shadow = high - max(open, close)
 
     # if (float(upper_shadow) <= 1.5) and (float(low) < float(open)) and (
     #         float(close) > float(open)) and (
     #         float(close) > float(smma) and (
     #         float(high) - float(low) <= 12)):
-    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close > smma) and (high - low <= 12):
-        cur.execute("update " + table + " SET hammer = 'Y'")
+    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close > smma) and (high - low <= 12) and (low - smma <= 4):
+        cur.execute("update " + table + " SET hammer = 'Y' where epoch = '" + str(epoch) + "'")
         conn.commit()
-        print("Hammer Successfully Inserted")
+        print("Hammer Successfully Inserted - Y")
         conn.close()
     else:
-        cur.execute("update " + table + " SET hammer = 'N'")
+        cur.execute("update " + table + " SET hammer = 'N' where epoch = '" + str(epoch) + "'")
         conn.commit()
-        print("Hammer Successfully Inserted")
+        print("Hammer Successfully Inserted - N")
         conn.close()
 
 
@@ -1548,6 +1583,125 @@ def update_db(dict_to_db, table):
     conn.commit()
     print("Data Successfully Inserted")
     conn.close()
+
+
+
+def update_db_color(table):
+    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+                          r'Server=' + server + ';'
+                          'Database=' + db + ';'
+                          'Trusted_Connection=yes;')  # integrated security
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+    full_row = cur.fetchall()
+
+    open = float(full_row[0][0])
+    close = float(full_row[0][1])
+    epoch = int(full_row[0][8])
+
+    # high = float(full_row[0][2])
+    # low = float(full_row[0][3])
+    # sma = float(full_row[0][10])
+    # smma = float(full_row[0][11])
+    # adx = float(full_row[0][12])
+    # ema9 = float(full_row[0][13])
+
+
+
+    # upper_shadow = high - max(open, close)
+
+
+    if (close > open):
+        cur.execute("update " + table + " SET color = 'G' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Color update - G")
+        conn.close()
+    else:
+        cur.execute("update " + table + " SET color = 'R' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Color update - R")
+        conn.close()
+
+
+def update_db_doji(table):
+    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+                          r'Server=' + server + ';'
+                          'Database=' + db + ';'
+                          'Trusted_Connection=yes;')  # integrated security
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+    full_row = cur.fetchall()
+
+    open = float(full_row[0][0])
+    close = float(full_row[0][1])
+    epoch = int(full_row[0][8])
+
+    diff_open_close = abs(open - close)
+
+    # high = float(full_row[0][2])
+    # low = float(full_row[0][3])
+    # sma = float(full_row[0][10])
+    # smma = float(full_row[0][11])
+    # adx = float(full_row[0][12])
+    # ema9 = float(full_row[0][13])
+
+
+
+    # upper_shadow = high - max(open, close)
+
+
+    if (diff_open_close <= 0.05):
+        cur.execute("update " + table + " SET doji = 'Y' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Doji update - Y")
+        conn.close()
+    else:
+        cur.execute("update " + table + " SET doji = 'N' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Doji update - N")
+        conn.close()
+
+
+def update_db_buy(table):
+    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+                          r'Server=' + server + ';'
+                          'Database=' + db + ';'
+                          'Trusted_Connection=yes;')  # integrated security
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+    full_row = cur.fetchall()
+
+    epoch = int(full_row[0][8])
+    hammer = full_row[0][14]
+    color = full_row[0][15]
+    doji = full_row[0][16]
+
+    # high = float(full_row[0][2])
+    # low = float(full_row[0][3])
+    # sma = float(full_row[0][10])
+    # smma = float(full_row[0][11])
+    # adx = float(full_row[0][12])
+    # ema9 = float(full_row[0][13])
+
+
+
+    # upper_shadow = high - max(open, close)
+
+    if hammer == "Y" and color == "G" and doji == "N":
+        cur.execute("update " + table + " SET buy = 'Y' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Color update - Y")
+        conn.close()
+    else:
+        cur.execute("update " + table + " SET buy = 'N' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Color update - N")
+        conn.close()
+
+
 
 
 
