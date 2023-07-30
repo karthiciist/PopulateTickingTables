@@ -13,6 +13,7 @@ import urllib
 import configparser
 import datetime
 from datetime import timedelta
+import requests
 
 config_obj = configparser.ConfigParser()
 config_obj.read(".\configfile.ini")
@@ -25,6 +26,7 @@ indexparam = config_obj["symbol"]
 indexsymbol = indexparam["indexsymbol"]
 cesymbol = indexparam["cesymbol"]
 pesymbol = indexparam["pesymbol"]
+expiry = indexparam["expiry"]
 
 
 # Populating OCS DB tables for Index
@@ -77,6 +79,9 @@ def populate_nifty_1m_table():
             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
             to_db_dict["epoch"] = to_epoch_time
             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+
+
+
             update_db(to_db_dict, "NIFTY_1m_Ticker")
             populate_NIFTY_1m_indicators()
             is_hammer("NIFTY_1m_Ticker")
@@ -87,218 +92,217 @@ def populate_nifty_1m_table():
             print(e)
             continue
 
-
-def populate_nifty_2m_table():
-    while (True):
-        try:
-            time.sleep(119)
-            #             time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=2))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 119
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824819
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 119
-
-            print("from_epoch_time -", from_epoch_time)
-            print("current_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=2&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "NIFTY_2m_Ticker")
-            populate_NIFTY_2m_indicators()
-            is_hammer("NIFTY_2m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_nifty_3m_table():
-    while (True):
-        try:
-            time.sleep(179)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=3))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 179
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824879
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 179
-
-            print("from_epoch_time -", from_epoch_time)
-            print("current_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=3&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "NIFTY_3m_Ticker")
-            populate_NIFTY_3m_indicators()
-            is_hammer("NIFTY_3m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_nifty_5m_table():
-    while (True):
-        try:
-            time.sleep(299)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=5))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 299
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824999
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 299
-
-            print("from_epoch_time -", from_epoch_time)
-            print("current_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=5&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "NIFTY_5m_Ticker")
-            populate_NIFTY_5m_indicators()
-            is_hammer("NIFTY_5m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_nifty_10m_table():
-    while (True):
-        try:
-            time.sleep(599)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=10))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 599
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689825299
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 599
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=10&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "NIFTY_10m_Ticker")
-            populate_NIFTY_10m_indicators()
-            is_hammer("NIFTY_10m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
+#
+# def populate_nifty_2m_table():
+#     while (True):
+#         try:
+#             time.sleep(119)
+#             #             time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=2))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 119
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824819
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 119
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("current_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=2&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "NIFTY_2m_Ticker")
+#             populate_NIFTY_2m_indicators()
+#             is_hammer("NIFTY_2m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_nifty_3m_table():
+#     while (True):
+#         try:
+#             time.sleep(179)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=3))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 179
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824879
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 179
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("current_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=3&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "NIFTY_3m_Ticker")
+#             populate_NIFTY_3m_indicators()
+#             is_hammer("NIFTY_3m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_nifty_5m_table():
+#     while (True):
+#         try:
+#             time.sleep(299)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=5))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 299
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824999
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 299
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("current_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=5&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "NIFTY_5m_Ticker")
+#             populate_NIFTY_5m_indicators()
+#             is_hammer("NIFTY_5m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_nifty_10m_table():
+#     while (True):
+#         try:
+#             time.sleep(599)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=10))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 599
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689825299
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 599
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + indexsymbol + "&periodicity=MINUTE&period=10&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "NIFTY_10m_Ticker")
+#             populate_NIFTY_10m_indicators()
+#             is_hammer("NIFTY_10m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
 
 def populate_NIFTY_1m_indicators():
 
@@ -313,7 +317,7 @@ def populate_NIFTY_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'symbol', 'strikeprice']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -343,176 +347,178 @@ def populate_NIFTY_1m_indicators():
     conn.close()
 
 
-def populate_NIFTY_2m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM NIFTY_2m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update NIFTY_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
 
 
-def populate_NIFTY_3m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM NIFTY_3m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update NIFTY_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_NIFTY_5m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM NIFTY_5m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update NIFTY_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_NIFTY_10m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM NIFTY_10m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update NIFTY_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
+# def populate_NIFTY_2m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM NIFTY_2m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update NIFTY_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_NIFTY_3m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM NIFTY_3m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update NIFTY_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_NIFTY_5m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM NIFTY_5m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update NIFTY_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_NIFTY_10m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM NIFTY_10m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update NIFTY_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
 
 
 
@@ -567,6 +573,25 @@ def populate_CE_1m_table():
             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
             to_db_dict["epoch"] = to_epoch_time
             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+
+
+
+
+            optionchain = get_option_chain_dataframe("NIFTY")
+            # print(optionchain.to_markdown())
+            call_strikeprice_df = optionchain[optionchain["CALL LTP"].ge(119) & optionchain["CALL LTP"].lt(181)][
+                "STRIKE PRICE"]
+            call_strikeprice_list = call_strikeprice_df.tolist()
+            # call_strikeprice_list.append(19600)
+            call_strikeprice = max(call_strikeprice_list)
+            print('Call Strike price -', call_strikeprice)
+
+            to_db_dict["strikeprice"] = str(call_strikeprice)
+            to_db_dict["symbol"] = "OPTIDX_NIFTY_" + expiry + "_CE_" + str(call_strikeprice)
+
+
+
+
             update_db(to_db_dict, "CE_STRIKE_1m_Ticker")
             populate_CE_1m_indicators()
             is_hammer("CE_STRIKE_1m_Ticker")
@@ -577,218 +602,216 @@ def populate_CE_1m_table():
             print(e)
             continue
 
-
-def populate_CE_2m_table():
-    while (True):
-        try:
-            time.sleep(119)
-            #             time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=2))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 119
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824819
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 119
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=2&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "CE_STRIKE_2m_Ticker")
-            populate_CE_2m_indicators()
-            is_hammer("CE_STRIKE_2m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_CE_3m_table():
-    while (True):
-        try:
-            time.sleep(179)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=3))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 179
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824879
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 179
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=3&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "CE_STRIKE_3m_Ticker")
-            populate_CE_3m_indicators()
-            is_hammer("CE_STRIKE_3m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_CE_5m_table():
-    while (True):
-        try:
-            time.sleep(299)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=5))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 299
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824999
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 299
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=5&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "CE_STRIKE_5m_Ticker")
-            populate_CE_5m_indicators()
-            is_hammer("CE_STRIKE_5m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_CE_10m_table():
-    while (True):
-        try:
-            time.sleep(599)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=10))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 599
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689825299
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 599
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=10&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "CE_STRIKE_10m_Ticker")
-            populate_CE_10m_indicators()
-            is_hammer("CE_STRIKE_10m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
+# def populate_CE_2m_table():
+#     while (True):
+#         try:
+#             time.sleep(119)
+#             #             time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=2))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 119
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824819
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 119
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=2&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "CE_STRIKE_2m_Ticker")
+#             populate_CE_2m_indicators()
+#             is_hammer("CE_STRIKE_2m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_CE_3m_table():
+#     while (True):
+#         try:
+#             time.sleep(179)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=3))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 179
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824879
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 179
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=3&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "CE_STRIKE_3m_Ticker")
+#             populate_CE_3m_indicators()
+#             is_hammer("CE_STRIKE_3m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_CE_5m_table():
+#     while (True):
+#         try:
+#             time.sleep(299)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=5))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 299
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824999
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 299
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=5&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "CE_STRIKE_5m_Ticker")
+#             populate_CE_5m_indicators()
+#             is_hammer("CE_STRIKE_5m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_CE_10m_table():
+#     while (True):
+#         try:
+#             time.sleep(599)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=10))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 599
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689825299
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 599
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + cesymbol + "&periodicity=MINUTE&period=10&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "CE_STRIKE_10m_Ticker")
+#             populate_CE_10m_indicators()
+#             is_hammer("CE_STRIKE_10m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
 
 def populate_CE_1m_indicators():
 
@@ -803,7 +826,7 @@ def populate_CE_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason', 'symbol', 'strikeprice']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -833,176 +856,178 @@ def populate_CE_1m_indicators():
     conn.close()
 
 
-def populate_CE_2m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM CE_STRIKE_2m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update CE_STRIKE_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
 
 
-def populate_CE_3m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM CE_STRIKE_3m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update CE_STRIKE_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_CE_5m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM CE_STRIKE_5m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update CE_STRIKE_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_CE_10m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM CE_STRIKE_10m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update CE_STRIKE_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
+# def populate_CE_2m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM CE_STRIKE_2m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update CE_STRIKE_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_CE_3m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM CE_STRIKE_3m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update CE_STRIKE_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_CE_5m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM CE_STRIKE_5m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update CE_STRIKE_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_CE_10m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM CE_STRIKE_10m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update CE_STRIKE_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
 
 
 
@@ -1058,6 +1083,23 @@ def populate_PE_1m_table():
             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
             to_db_dict["epoch"] = to_epoch_time
             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+
+
+
+            optionchain = get_option_chain_dataframe("NIFTY")
+            # print(optionchain.to_markdown())
+            put_strikeprice_df = optionchain[optionchain["PUT LTP"].ge(119) & optionchain["PUT LTP"].lt(181)][
+                "STRIKE PRICE"]
+            put_strikeprice_list = put_strikeprice_df.tolist()
+            put_strikeprice = max(put_strikeprice_list)
+            print('Put Strike price -', put_strikeprice)
+
+            to_db_dict["strikeprice"] = str(put_strikeprice)
+            to_db_dict["symbol"] = "OPTIDX_NIFTY_" + expiry + "_PE_" + str(put_strikeprice)
+
+
+
+
             update_db(to_db_dict, "PE_STRIKE_1m_Ticker")
             populate_PE_1m_indicators()
             is_hammer("PE_STRIKE_1m_Ticker")
@@ -1068,218 +1110,216 @@ def populate_PE_1m_table():
             print(e)
             continue
 
-
-def populate_PE_2m_table():
-    while (True):
-        try:
-            time.sleep(119)
-            #             time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=2))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 119
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824819
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 119
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=2&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "PE_STRIKE_2m_Ticker")
-            populate_PE_2m_indicators()
-            is_hammer("PE_STRIKE_2m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_PE_3m_table():
-    while (True):
-        try:
-            time.sleep(179)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=3))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 179
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824879
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 179
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=3&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "PE_STRIKE_3m_Ticker")
-            populate_PE_3m_indicators()
-            is_hammer("PE_STRIKE_3m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_PE_5m_table():
-    while (True):
-        try:
-            time.sleep(299)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=5))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 299
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689824999
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 299
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=5&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "PE_STRIKE_5m_Ticker")
-            populate_PE_5m_indicators()
-            is_hammer("PE_STRIKE_5m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
-
-def populate_PE_10m_table():
-    while (True):
-        try:
-            time.sleep(599)
-            #time.sleep(5)
-            to_db_dict = {}
-
-            swipe_in = datetime.datetime.today()
-            new_swipe_in = (swipe_in - timedelta(minutes=10))
-            s = new_swipe_in.replace(second=0, microsecond=0)
-            from_epoch_time = int(s.timestamp())
-            to_epoch_time = int(from_epoch_time) + 599
-
-            # from_epoch_time = 1689824700
-            # current_epoch_time = 1689825299
-            # current_epoch_time = int(time.time())
-            # from_epoch_time = current_epoch_time - 599
-
-            print("from_epoch_time -", from_epoch_time)
-            print("to_epoch_time -", to_epoch_time)
-
-
-
-            conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
-            payload = ''
-            headers = {}
-            conn.request("GET",
-                         "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=10&from=" + str(
-                             from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
-            res = conn.getresponse()
-            data = res.read()
-            json_object = json.loads(data.decode("utf-8"))
-
-            out_dict = json_object["OHLC"][0]
-
-            to_db_dict["close"] = out_dict.get('CLOSE')
-            to_db_dict["high"] = out_dict.get('HIGH')
-            to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
-            to_db_dict["low"] = out_dict.get('LOW')
-            to_db_dict["open"] = out_dict.get('OPEN')
-            to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
-            to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
-            to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
-            to_db_dict["epoch"] = to_epoch_time
-            to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
-            update_db(to_db_dict, "PE_STRIKE_10m_Ticker")
-            populate_PE_10m_indicators()
-            is_hammer("PE_STRIKE_10m_Ticker")
-        except Exception as e:
-            print(e)
-            continue
-
+# def populate_PE_2m_table():
+#     while (True):
+#         try:
+#             time.sleep(119)
+#             #             time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=2))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 119
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824819
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 119
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=2&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "PE_STRIKE_2m_Ticker")
+#             populate_PE_2m_indicators()
+#             is_hammer("PE_STRIKE_2m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_PE_3m_table():
+#     while (True):
+#         try:
+#             time.sleep(179)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=3))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 179
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824879
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 179
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=3&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "PE_STRIKE_3m_Ticker")
+#             populate_PE_3m_indicators()
+#             is_hammer("PE_STRIKE_3m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_PE_5m_table():
+#     while (True):
+#         try:
+#             time.sleep(299)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=5))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 299
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689824999
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 299
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=5&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "PE_STRIKE_5m_Ticker")
+#             populate_PE_5m_indicators()
+#             is_hammer("PE_STRIKE_5m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
+#
+#
+# def populate_PE_10m_table():
+#     while (True):
+#         try:
+#             time.sleep(599)
+#             #time.sleep(5)
+#             to_db_dict = {}
+#
+#             swipe_in = datetime.datetime.today()
+#             new_swipe_in = (swipe_in - timedelta(minutes=10))
+#             s = new_swipe_in.replace(second=0, microsecond=0)
+#             from_epoch_time = int(s.timestamp())
+#             to_epoch_time = int(from_epoch_time) + 599
+#
+#             # from_epoch_time = 1689824700
+#             # current_epoch_time = 1689825299
+#             # current_epoch_time = int(time.time())
+#             # from_epoch_time = current_epoch_time - 599
+#
+#             print("from_epoch_time -", from_epoch_time)
+#             print("to_epoch_time -", to_epoch_time)
+#
+#
+#
+#             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
+#             payload = ''
+#             headers = {}
+#             conn.request("GET",
+#                          "/GetHistory/?accessKey=b44bbc1d-f995-416e-9aa4-d8741fc68006&exchange=NFO&instrumentIdentifier=" + pesymbol + "&periodicity=MINUTE&period=10&from=" + str(
+#                              from_epoch_time) + "&to=" + str(to_epoch_time), payload, headers)
+#             res = conn.getresponse()
+#             data = res.read()
+#             json_object = json.loads(data.decode("utf-8"))
+#
+#             out_dict = json_object["OHLC"][0]
+#
+#             to_db_dict["close"] = out_dict.get('CLOSE')
+#             to_db_dict["high"] = out_dict.get('HIGH')
+#             to_db_dict["last_trade_time"] = out_dict.get('LASTTRADETIME')
+#             to_db_dict["low"] = out_dict.get('LOW')
+#             to_db_dict["open"] = out_dict.get('OPEN')
+#             to_db_dict["open_interest"] = out_dict.get('OPENINTEREST')
+#             to_db_dict["quotation_lot"] = out_dict.get('QUOTATIONLOT')
+#             to_db_dict["traded_qty"] = out_dict.get('TRADEDQTY')
+#             to_db_dict["epoch"] = to_epoch_time
+#             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
+#             update_db(to_db_dict, "PE_STRIKE_10m_Ticker")
+#             populate_PE_10m_indicators()
+#             is_hammer("PE_STRIKE_10m_Ticker")
+#         except Exception as e:
+#             print(e)
+#             continue
 
 def populate_PE_1m_indicators():
 
@@ -1294,7 +1334,7 @@ def populate_PE_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason', 'symbol', 'strikeprice']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -1333,176 +1373,176 @@ def populate_PE_1m_indicators():
     conn.close()
 
 
-def populate_PE_2m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM PE_STRIKE_2m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update PE_STRIKE_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_PE_3m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM PE_STRIKE_3m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update PE_STRIKE_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_PE_5m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM PE_STRIKE_5m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update PE_STRIKE_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
-
-
-def populate_PE_10m_indicators():
-
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute('''SELECT * FROM PE_STRIKE_10m_Ticker''')
-    myresult = cur.fetchall()
-
-    df = pd.DataFrame((tuple(t) for t in myresult))
-    df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
-    convert_dict = {'open': float,
-                    'close': float,
-                    'high': float,
-                    'low': float
-                    }
-
-    df = df.astype(convert_dict)
-    # print(df.dtypes)
-    smma_series = TA.SMMA(df, 7)
-    sma_series = TA.SMA(df, 20)
-    adx_series = TA.ADX(df, 14)
-    ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
-
-    rownum = 0
-    for index, rows in df.iterrows():
-        sma = df['sma'][rownum]
-        smma = df['smma'][rownum]
-        adx = df['adx'][rownum]
-        ema9 = df['ema9'][rownum]
-        epoch = df['epoch'][rownum]
-        cur.execute("""update PE_STRIKE_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
-        rownum += 1
-    conn.commit()
-    print("Data Successfully Inserted")
-    conn.close()
+# def populate_PE_2m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM PE_STRIKE_2m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update PE_STRIKE_2m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_PE_3m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM PE_STRIKE_3m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update PE_STRIKE_3m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_PE_5m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM PE_STRIKE_5m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update PE_STRIKE_5m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
+#
+#
+# def populate_PE_10m_indicators():
+#
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute('''SELECT * FROM PE_STRIKE_10m_Ticker''')
+#     myresult = cur.fetchall()
+#
+#     df = pd.DataFrame((tuple(t) for t in myresult))
+#     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
+#                   'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer']
+#     convert_dict = {'open': float,
+#                     'close': float,
+#                     'high': float,
+#                     'low': float
+#                     }
+#
+#     df = df.astype(convert_dict)
+#     # print(df.dtypes)
+#     smma_series = TA.SMMA(df, 7)
+#     sma_series = TA.SMA(df, 20)
+#     adx_series = TA.ADX(df, 14)
+#     ema9_series = TA.EMA(df, 9)
+#     df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+#
+#     rownum = 0
+#     for index, rows in df.iterrows():
+#         sma = df['sma'][rownum]
+#         smma = df['smma'][rownum]
+#         adx = df['adx'][rownum]
+#         ema9 = df['ema9'][rownum]
+#         epoch = df['epoch'][rownum]
+#         cur.execute("""update PE_STRIKE_10m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
+#                     str(smma), str(adx), str(ema9), str(epoch))
+#         rownum += 1
+#     conn.commit()
+#     print("Data Successfully Inserted")
+#     conn.close()
 
 
 
@@ -1535,7 +1575,7 @@ def is_hammer(table):
     #         float(close) > float(open)) and (
     #         float(close) > float(smma) and (
     #         float(high) - float(low) <= 12)):
-    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close > smma) and (high - low <= 12) and (low - smma <= 4):
+    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close > smma) and (high - low <= 12) and (low - smma <= 3):
         cur.execute("update " + table + " SET hammer = 'Y' where epoch = '" + str(epoch) + "'")
         conn.commit()
         print("Hammer Successfully Inserted - Y")
@@ -1559,6 +1599,8 @@ def update_db(dict_to_db, table):
     traded_qty = str(dict_to_db.get('traded_qty'))
     epoch = str(dict_to_db.get('epoch'))
     datetime = str(dict_to_db.get('datetime'))
+    symbol = str(dict_to_db.get('symbol'))
+    strikeprice = str(dict_to_db.get('strikeprice'))
 
     # conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
     #                       r'Server=localhost\MSSQLSERVER01;'
@@ -1573,8 +1615,8 @@ def update_db(dict_to_db, table):
     cursor = conn.cursor()
 
     SQLCommand = (
-            "INSERT INTO " + table + " ([close], [high], last_traded_time, [low], [open], open_interest, quotation_lot, traded_qty, epoch, datetime) VALUES (?,?,?,?,?,?,?,?,?,?);")
-    Values = [close, high, last_trade_time, low, open_price, open_interest, quotation_lot, traded_qty, epoch, datetime]
+            "INSERT INTO " + table + " ([close], [high], last_traded_time, [low], [open], open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);")
+    Values = [close, high, last_trade_time, low, open_price, open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice]
 
     #     print(SQLCommand)
     # Processing Query
@@ -1636,9 +1678,17 @@ def update_db_doji(table):
 
     open = float(full_row[0][0])
     close = float(full_row[0][1])
+    high = float(full_row[0][2])
+    low = float(full_row[0][3])
     epoch = int(full_row[0][8])
 
     diff_open_close = abs(open - close)
+
+
+    epoch = int(full_row[0][8])
+
+    upper_shadow = high - max(open, close)
+    low_shadow = min(open, close) - low
 
     # high = float(full_row[0][2])
     # low = float(full_row[0][3])
@@ -1651,8 +1701,7 @@ def update_db_doji(table):
 
     # upper_shadow = high - max(open, close)
 
-
-    if (diff_open_close <= 0.05):
+    if (diff_open_close <= 0.05) or (low_shadow <= 2 * upper_shadow):
         cur.execute("update " + table + " SET doji = 'Y' where epoch = '" + str(epoch) + "'")
         conn.commit()
         print("Doji update - Y")
@@ -1700,6 +1749,57 @@ def update_db_buy(table):
         conn.commit()
         print("Color update - N")
         conn.close()
+
+
+def get_option_chain_dataframe(symbol):
+    url = 'https://www.nseindia.com/api/option-chain-indices?symbol=' + symbol
+
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37',
+        'accept-encoding': 'gzip, deflate, br', 'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8'}
+
+    session = requests.Session()
+    request = session.get(url, headers=headers)
+    cookies = dict(request.cookies)
+
+    response = session.get(url, headers=headers, cookies=cookies).json()
+    rawdata = pd.DataFrame(response)
+    rawop = pd.DataFrame(rawdata['filtered']['data']).fillna(0)
+    data = []
+    for i in range(0, len(rawop)):
+        calloi = callcoi = cltp = putoi = putcoi = pltp = 0
+        stp = rawop['strikePrice'][i]
+        if (rawop['CE'][i] == 0):
+            calloi = callcoi = 0
+        else:
+            calloi = rawop['CE'][i]['openInterest']
+            callcoi = rawop['CE'][i]['changeinOpenInterest']
+            cltp = rawop['CE'][i]['lastPrice']
+        if (rawop['PE'][i] == 0):
+            putoi = putcoi = 0
+        else:
+            putoi = rawop['PE'][i]['openInterest']
+            putcoi = rawop['PE'][i]['changeinOpenInterest']
+            pltp = rawop['PE'][i]['lastPrice']
+        opdata = {
+            #             'CALL OI': calloi, 'CALL CHNG OI': callcoi, 'CALL LTP': cltp, 'STRIKE PRICE': stp,
+            #             'PUT OI': putoi, 'PUT CHNG OI': putcoi, 'PUT LTP': pltp
+            'CALL LTP': cltp, 'STRIKE PRICE': stp, 'PUT LTP': pltp
+        }
+
+        data.append(opdata)
+    optionchain = pd.DataFrame(data)
+    return optionchain
+
+
+
+
+
+
+
+
+
+
 
 
 
