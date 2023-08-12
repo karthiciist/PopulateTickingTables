@@ -16,7 +16,7 @@ from datetime import timedelta
 import requests
 
 config_obj = configparser.ConfigParser()
-config_obj.read(".\configfile.ini")
+config_obj.read("..\configfile.ini")
 
 dbparam = config_obj["mssql"]
 server = dbparam["Server"]
@@ -24,9 +24,14 @@ db = dbparam["db"]
 
 indexparam = config_obj["symbol"]
 indexsymbol = indexparam["indexsymbol"]
-cesymbol = indexparam["cesymbol"]
-pesymbol = indexparam["pesymbol"]
-expiry = indexparam["expiry"]
+global_datafeeds_expiry = indexparam["global_datafeeds_expiry"]
+fyers_expiry = indexparam["fyers_expiry"]
+optionchainsymbol = indexparam["optionchainsymbol"]
+put_strike = indexparam["put_strike"]
+call_strike = indexparam["call_strike"]
+
+# cesymbol = indexparam["cesymbol"]
+# pesymbol = indexparam["pesymbol"]
 
 
 # Populating OCS DB tables for Index
@@ -84,10 +89,14 @@ def populate_nifty_1m_table():
 
             update_db(to_db_dict, "NIFTY_1m_Ticker")
             populate_NIFTY_1m_indicators()
-            is_hammer("NIFTY_1m_Ticker")
+
             update_db_color("NIFTY_1m_Ticker")
             update_db_doji("NIFTY_1m_Ticker")
+            update_inv_hammer("NIFTY_1m_Ticker")
+            update_marbooza("NIFTY_1m_Ticker")
             # update_db_buy("NIFTY_1m_Ticker")
+            is_hammer("NIFTY_1m_Ticker")
+
         except Exception as e:
             print(e)
             continue
@@ -317,7 +326,7 @@ def populate_NIFTY_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'symbol', 'strikeprice']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'symbol', 'strikeprice', 'fyerssymbol']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -545,6 +554,29 @@ def populate_CE_1m_table():
             print("from_epoch_time -", from_epoch_time)
             print("to_epoch_time -", to_epoch_time)
 
+
+
+
+
+
+            # optionchain = get_option_chain_dataframe(optionchainsymbol)
+            # print(optionchain.to_markdown())
+            # call_strikeprice_df = optionchain[optionchain["CALL LTP"].ge(119) & optionchain["CALL LTP"].lt(171)][
+            #     "STRIKE PRICE"]
+            # call_strikeprice_list = call_strikeprice_df.tolist()
+            # call_strikeprice_list.append(19600)
+            # call_strikeprice = max(call_strikeprice_list)
+            print('Call Strike price -', call_strike)
+            cesymbol = "OPTIDX_NIFTY_" + global_datafeeds_expiry + "_CE_" + str(call_strike)
+            to_db_dict["strikeprice"] = str(call_strike)
+            to_db_dict["symbol"] = cesymbol
+            to_db_dict["fyerssymbol"] = "NSE:NIFTY" + fyers_expiry + str(call_strike) + "CE"
+
+
+
+
+
+
             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
             payload = ''
             headers = {}
@@ -577,26 +609,19 @@ def populate_CE_1m_table():
 
 
 
-            optionchain = get_option_chain_dataframe("NIFTY")
-            # print(optionchain.to_markdown())
-            call_strikeprice_df = optionchain[optionchain["CALL LTP"].ge(119) & optionchain["CALL LTP"].lt(181)][
-                "STRIKE PRICE"]
-            call_strikeprice_list = call_strikeprice_df.tolist()
-            # call_strikeprice_list.append(19600)
-            call_strikeprice = max(call_strikeprice_list)
-            print('Call Strike price -', call_strikeprice)
-
-            to_db_dict["strikeprice"] = str(call_strikeprice)
-            to_db_dict["symbol"] = "OPTIDX_NIFTY_" + expiry + "_CE_" + str(call_strikeprice)
-
 
 
 
             update_db(to_db_dict, "CE_STRIKE_1m_Ticker")
             populate_CE_1m_indicators()
-            is_hammer("CE_STRIKE_1m_Ticker")
+
             update_db_color("CE_STRIKE_1m_Ticker")
             update_db_doji("CE_STRIKE_1m_Ticker")
+            update_inv_hammer("CE_STRIKE_1m_Ticker")
+            update_marbooza("CE_STRIKE_1m_Ticker")
+
+            is_hammer("CE_STRIKE_1m_Ticker")
+
             # update_db_buy("CE_STRIKE_1m_Ticker")
         except Exception as e:
             print(e)
@@ -826,7 +851,7 @@ def populate_CE_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason', 'symbol', 'strikeprice']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'rsi', 'hammer', 'color', 'doji', 'inv_hammer', 'marbooza', 'buy', 'reason', 'symbol', 'strikeprice', 'fyerssymbol']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -839,7 +864,8 @@ def populate_CE_1m_indicators():
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
     ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+    rsi_series = TA.RSI(df, 14)
+    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series, rsi=rsi_series)
 
     rownum = 0
     for index, rows in df.iterrows():
@@ -847,9 +873,10 @@ def populate_CE_1m_indicators():
         smma = df['smma'][rownum]
         adx = df['adx'][rownum]
         ema9 = df['ema9'][rownum]
+        rsi = df['rsi'][rownum]
         epoch = df['epoch'][rownum]
-        cur.execute("""update CE_STRIKE_1m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
+        cur.execute("""update CE_STRIKE_1m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ?, rsi = ? WHERE epoch = ?""", str(sma),
+                    str(smma), str(adx), str(ema9), str(rsi), str(epoch))
         rownum += 1
     conn.commit()
     print("Data Successfully Inserted")
@@ -1055,6 +1082,29 @@ def populate_PE_1m_table():
             print("from_epoch_time -", from_epoch_time)
             print("to_epoch_time -", to_epoch_time)
 
+
+
+
+
+            # optionchain = get_option_chain_dataframe(optionchainsymbol)
+            # print(optionchain.to_markdown())
+            # put_strikeprice_df = optionchain[optionchain["PUT LTP"].ge(119) & optionchain["PUT LTP"].lt(171)][
+            #     "STRIKE PRICE"]
+            # put_strikeprice_list = put_strikeprice_df.tolist()
+            # put_strikeprice = max(put_strikeprice_list)
+            print('Put Strike price -', put_strike)
+            to_db_dict["strikeprice"] = str(put_strike)
+            pesymbol = "OPTIDX_NIFTY_" + global_datafeeds_expiry + "_PE_" + str(put_strike)
+            to_db_dict["symbol"] = pesymbol
+            to_db_dict["fyerssymbol"] = "NSE:NIFTY" + fyers_expiry + str(put_strike) + "PE"
+
+
+
+
+
+
+
+
             conn = http.client.HTTPSConnection("nimblerest.lisuns.com", 4532)
             payload = ''
             headers = {}
@@ -1084,27 +1134,15 @@ def populate_PE_1m_table():
             to_db_dict["epoch"] = to_epoch_time
             to_db_dict["datetime"] = datetime.datetime.fromtimestamp(to_epoch_time).strftime('%d-%m-%Y %H:%M:%S')
 
-
-
-            optionchain = get_option_chain_dataframe("NIFTY")
-            # print(optionchain.to_markdown())
-            put_strikeprice_df = optionchain[optionchain["PUT LTP"].ge(119) & optionchain["PUT LTP"].lt(181)][
-                "STRIKE PRICE"]
-            put_strikeprice_list = put_strikeprice_df.tolist()
-            put_strikeprice = max(put_strikeprice_list)
-            print('Put Strike price -', put_strikeprice)
-
-            to_db_dict["strikeprice"] = str(put_strikeprice)
-            to_db_dict["symbol"] = "OPTIDX_NIFTY_" + expiry + "_PE_" + str(put_strikeprice)
-
-
-
-
             update_db(to_db_dict, "PE_STRIKE_1m_Ticker")
             populate_PE_1m_indicators()
-            is_hammer("PE_STRIKE_1m_Ticker")
+
             update_db_color("PE_STRIKE_1m_Ticker")
             update_db_doji("PE_STRIKE_1m_Ticker")
+            update_inv_hammer("PE_STRIKE_1m_Ticker")
+            update_marbooza("PE_STRIKE_1m_Ticker")
+
+            is_hammer("PE_STRIKE_1m_Ticker")
             # update_db_buy("PE_STRIKE_1m_Ticker")
         except Exception as e:
             print(e)
@@ -1334,7 +1372,7 @@ def populate_PE_1m_indicators():
 
     df = pd.DataFrame((tuple(t) for t in myresult))
     df.columns = ['open', 'close', 'high', 'low', 'last_trade_time', 'open_interest', 'quotation_lot', 'traded_qty',
-                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'hammer', 'color', 'doji', 'buy', 'reason', 'symbol', 'strikeprice']
+                  'epoch', 'datetime', 'sma', 'smma', 'adx', 'ema9', 'rsi', 'hammer', 'color', 'doji', 'inv_hammer', 'marbooza', 'buy', 'reason', 'symbol', 'strikeprice', 'fyerssymbol']
     convert_dict = {'open': float,
                     'close': float,
                     'high': float,
@@ -1347,7 +1385,8 @@ def populate_PE_1m_indicators():
     sma_series = TA.SMA(df, 20)
     adx_series = TA.ADX(df, 14)
     ema9_series = TA.EMA(df, 9)
-    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series)
+    rsi_series = TA.RSI(df)
+    df = df.assign(smma=smma_series, sma=sma_series, adx=adx_series, ema9=ema9_series, rsi=rsi_series)
 
     # df.ta.ema(13, append=True)
     # df.ta.sma(20, append=True)
@@ -1364,9 +1403,10 @@ def populate_PE_1m_indicators():
         smma = df['smma'][rownum]
         adx = df['adx'][rownum]
         ema9 = df['ema9'][rownum]
+        rsi = df['rsi'][rownum]
         epoch = df['epoch'][rownum]
-        cur.execute("""update PE_STRIKE_1m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ? WHERE epoch = ?""", str(sma),
-                    str(smma), str(adx), str(ema9), str(epoch))
+        cur.execute("""update PE_STRIKE_1m_Ticker SET sma = ?, smma = ?, adx = ?, ema9 = ?, rsi = ? WHERE epoch = ?""", str(sma),
+                    str(smma), str(adx), str(ema9), str(rsi), str(epoch))
         rownum += 1
     conn.commit()
     print("Data Successfully Inserted")
@@ -1548,43 +1588,6 @@ def populate_PE_1m_indicators():
 
 
 
-def is_hammer(table):
-    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
-                          r'Server=' + server + ';'
-                          'Database=' + db + ';'
-                          'Trusted_Connection=yes;')  # integrated security
-
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
-    full_row = cur.fetchall()
-
-    open = float(full_row[0][0])
-    close = float(full_row[0][1])
-    high = float(full_row[0][2])
-    low = float(full_row[0][3])
-    sma = float(full_row[0][10])
-    smma = float(full_row[0][11])
-    adx = float(full_row[0][12])
-    ema9 = float(full_row[0][13])
-
-    epoch = int(full_row[0][8])
-
-    upper_shadow = high - max(open, close)
-
-    # if (float(upper_shadow) <= 1.5) and (float(low) < float(open)) and (
-    #         float(close) > float(open)) and (
-    #         float(close) > float(smma) and (
-    #         float(high) - float(low) <= 12)):
-    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close > smma) and (high - low <= 12) and (low - smma <= 3):
-        cur.execute("update " + table + " SET hammer = 'Y' where epoch = '" + str(epoch) + "'")
-        conn.commit()
-        print("Hammer Successfully Inserted - Y")
-        conn.close()
-    else:
-        cur.execute("update " + table + " SET hammer = 'N' where epoch = '" + str(epoch) + "'")
-        conn.commit()
-        print("Hammer Successfully Inserted - N")
-        conn.close()
 
 
 def update_db(dict_to_db, table):
@@ -1601,6 +1604,7 @@ def update_db(dict_to_db, table):
     datetime = str(dict_to_db.get('datetime'))
     symbol = str(dict_to_db.get('symbol'))
     strikeprice = str(dict_to_db.get('strikeprice'))
+    fyerssymbol = str(dict_to_db.get('fyerssymbol'))
 
     # conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
     #                       r'Server=localhost\MSSQLSERVER01;'
@@ -1615,8 +1619,8 @@ def update_db(dict_to_db, table):
     cursor = conn.cursor()
 
     SQLCommand = (
-            "INSERT INTO " + table + " ([close], [high], last_traded_time, [low], [open], open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);")
-    Values = [close, high, last_trade_time, low, open_price, open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice]
+            "INSERT INTO " + table + " ([close], [high], last_traded_time, [low], [open], open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice, fyerssymbol) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);")
+    Values = [close, high, last_trade_time, low, open_price, open_interest, quotation_lot, traded_qty, epoch, datetime, symbol, strikeprice, fyerssymbol]
 
     #     print(SQLCommand)
     # Processing Query
@@ -1701,7 +1705,9 @@ def update_db_doji(table):
 
     # upper_shadow = high - max(open, close)
 
-    if (diff_open_close <= 0.05) or (low_shadow <= 2 * upper_shadow):
+    body = close - open
+
+    if (diff_open_close <= 0.05):
         cur.execute("update " + table + " SET doji = 'Y' where epoch = '" + str(epoch) + "'")
         conn.commit()
         print("Doji update - Y")
@@ -1713,7 +1719,7 @@ def update_db_doji(table):
         conn.close()
 
 
-def update_db_buy(table):
+def update_inv_hammer(table):
     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
                           r'Server=' + server + ';'
                           'Database=' + db + ';'
@@ -1723,32 +1729,153 @@ def update_db_buy(table):
     cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
     full_row = cur.fetchall()
 
+    open = float(full_row[0][0])
+    close = float(full_row[0][1])
+    high = float(full_row[0][2])
+    low = float(full_row[0][3])
     epoch = int(full_row[0][8])
-    hammer = full_row[0][14]
-    color = full_row[0][15]
-    doji = full_row[0][16]
 
-    # high = float(full_row[0][2])
-    # low = float(full_row[0][3])
-    # sma = float(full_row[0][10])
-    # smma = float(full_row[0][11])
-    # adx = float(full_row[0][12])
-    # ema9 = float(full_row[0][13])
+    epoch = int(full_row[0][8])
+
+    upper_shadow = high - max(open, close)
+    low_shadow = min(open, close) - low
 
 
+    body = close - open
 
-    # upper_shadow = high - max(open, close)
-
-    if hammer == "Y" and color == "G" and doji == "N":
-        cur.execute("update " + table + " SET buy = 'Y' where epoch = '" + str(epoch) + "'")
+    if  (low_shadow <= upper_shadow):
+        cur.execute("update " + table + " SET inv_hammer = 'Y' where epoch = '" + str(epoch) + "'")
         conn.commit()
-        print("Color update - Y")
+        print("inv_hammer update - Y")
         conn.close()
     else:
-        cur.execute("update " + table + " SET buy = 'N' where epoch = '" + str(epoch) + "'")
+        cur.execute("update " + table + " SET inv_hammer = 'N' where epoch = '" + str(epoch) + "'")
         conn.commit()
-        print("Color update - N")
+        print("inv_hammer update - N")
         conn.close()
+
+
+def update_marbooza(table):
+    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+                          r'Server=' + server + ';'
+                          'Database=' + db + ';'
+                          'Trusted_Connection=yes;')  # integrated security
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+    full_row = cur.fetchall()
+
+    open = float(full_row[0][0])
+    close = float(full_row[0][1])
+    high = float(full_row[0][2])
+    low = float(full_row[0][3])
+    epoch = int(full_row[0][8])
+
+    epoch = int(full_row[0][8])
+
+    upper_shadow = high - max(open, close)
+    low_shadow = min(open, close) - low
+
+    body = close - open
+
+    if (body >= low_shadow) or (upper_shadow >= low_shadow):
+        cur.execute("update " + table + " SET marbooza = 'Y' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("marbooza update - Y")
+        conn.close()
+    else:
+        cur.execute("update " + table + " SET marbooza = 'N' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("marbooza update - N")
+        conn.close()
+
+
+def is_hammer(table):
+    conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+                          r'Server=' + server + ';'
+                          'Database=' + db + ';'
+                          'Trusted_Connection=yes;')  # integrated security
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+    full_row = cur.fetchall()
+
+    open = float(full_row[0][0])
+    close = float(full_row[0][1])
+    high = float(full_row[0][2])
+    low = float(full_row[0][3])
+    sma = float(full_row[0][10])
+    smma = float(full_row[0][11])
+    adx = float(full_row[0][12])
+    ema9 = float(full_row[0][13])
+
+    color = full_row[0][16]
+    doji = full_row[0][17]
+    inv_hammer = full_row[0][18]
+    marbooza = full_row[0][19]
+
+    epoch = int(full_row[0][8])
+
+    upper_shadow = high - max(open, close)
+
+    # if (float(upper_shadow) <= 1.5) and (float(low) < float(open)) and (
+    #         float(close) > float(open)) and (
+    #         float(close) > float(smma) and (
+    #         float(high) - float(low) <= 12)):
+    if (upper_shadow <= 1.5) and (low < open) and (close > open) and (close >= smma) and (high - low <= 12) and (low - smma <= 2) and (color != 'R') and (doji != 'Y') and (inv_hammer != 'Y') and (marbooza != 'Y'):
+        cur.execute("update " + table + " SET hammer = 'Y' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Hammer Successfully Inserted - Y")
+        conn.close()
+    else:
+        cur.execute("update " + table + " SET hammer = 'N' where epoch = '" + str(epoch) + "'")
+        conn.commit()
+        print("Hammer Successfully Inserted - N")
+        conn.close()
+
+
+
+
+
+
+# def update_db_buy(table):
+#     conn = pyodbc.connect('Driver={SQL Server Native Client 11.0};'
+#                           r'Server=' + server + ';'
+#                           'Database=' + db + ';'
+#                           'Trusted_Connection=yes;')  # integrated security
+#
+#     cur = conn.cursor()
+#     cur.execute("SELECT * FROM " + table + " Order By datetime Desc")
+#     full_row = cur.fetchall()
+#
+#     epoch = int(full_row[0][8])
+#     hammer = full_row[0][15]
+#     color = full_row[0][16]
+#     doji = full_row[0][17]
+#     inv_hammer = full_row[0][18]
+#     marbooza = full_row[0][19]
+#
+#     # high = float(full_row[0][2])
+#     # low = float(full_row[0][3])
+#     # sma = float(full_row[0][10])
+#     # smma = float(full_row[0][11])
+#     # adx = float(full_row[0][12])
+#     # ema9 = float(full_row[0][13])
+#
+#
+#
+#     # upper_shadow = high - max(open, close)
+#
+#     if hammer == "Y" and color == "G" and doji == "N" and inv_hammer == "N" and marbooza == "N":
+#         cur.execute("update " + table + " SET buy = 'Y' where epoch = '" + str(epoch) + "'")
+#         conn.commit()
+#         print("Color update - Y")
+#         conn.close()
+#     else:
+#         cur.execute("update " + table + " SET buy = 'N' where epoch = '" + str(epoch) + "'")
+#         conn.commit()
+#         print("Color update - N")
+#         conn.close()
 
 
 def get_option_chain_dataframe(symbol):
